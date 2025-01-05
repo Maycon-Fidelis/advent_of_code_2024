@@ -1,49 +1,52 @@
 const fs = require('fs');
 
-fs.readFile('data.txt', 'utf8', (err, data) => {
-  if (err) {
-    console.error(err);
-    return;
+fs.readFile('data.txt', 'utf-8', (err, data) => {
+
+  const matriz = data.trim().split('\n').map(linha => linha.trim().split(''));
+
+  const antenas = [];
+
+  function dentroDosLimites(x, y, matriz) {
+    return x >= 0 && x < matriz.length && y >= 0 && y < matriz[0].length;
   }
 
-  const table = data.trim().split('\n').map(line => line.trim().split(''));
+  // Capturar todas as antenas e suas posições
+  for (let i = 0; i < matriz.length; i++) {
+    for (let j = 0; j < matriz[i].length; j++) {
+      if (matriz[i][j] !== '.') {
+        antenas.push({
+          tipo: matriz[i][j],
+          x: i,
+          y: j,
+        });
+      }
+    }
+  }
 
-  // Função para capturar as frequências com suas coordenadas
-  function capturar_frequencia(mapa) {
-    const frequencias = [];
-    for (let i = 0; i < mapa.length; i++) {
-      for (let j = 0; j < mapa[i].length; j++) {
-        if (mapa[i][j] !== '.') {
-          frequencias.push({
-            tipo: mapa[i][j], // Tipo ou frequência da antena
-            x: i,             // Coordenada X
-            y: j              // Coordenada Y
-          });
+  const antinodos = new Set();
+
+  // Calcular os antinodos para cada antena
+  for (let i = 0; i < antenas.length; i++) {
+    for (let j = i + 1; j < antenas.length; j++) {
+      if (antenas[i].tipo === antenas[j].tipo) {
+        const dx = antenas[j].x - antenas[i].x;
+        const dy = antenas[j].y - antenas[i].y;
+
+        // Adicionar os antinodos simétricos
+        const antinodo1 = `${antenas[j].x + dx},${antenas[j].y + dy}`;
+        const antinodo2 = `${antenas[i].x - dx},${antenas[i].y - dy}`;
+
+        if (dentroDosLimites(antenas[j].x + dx, antenas[j].y + dy, matriz)) {
+          antinodos.add(antinodo1);
+        }
+
+        if (dentroDosLimites(antenas[i].x - dx, antenas[i].y - dy, matriz)) {
+          antinodos.add(antinodo2);
         }
       }
     }
-    return frequencias;
   }
 
-  function contar_tipos(frequencias) {
-    const contagem = {};
-    for (const freq of frequencias) {
-      contagem[freq.tipo] = (contagem[freq.tipo] || 0) + 1;
-    }
-    return contagem;
-  }
-
-  const frequencias = capturar_frequencia(table);
-  const contagemTipos = contar_tipos(frequencias);
-
-  console.log("Frequências encontradas:", frequencias);
-  console.log("Contagem de tipos:", contagemTipos);
-
-  const tipos = Object.keys(contagemTipos);
-  console.log(tipos.length);
-
-  // for(const i = 0; i < tipos.length; i++){
-
-  // }
+  console.log("Quantidade de antinodos:", antinodos.size);
 
 });
